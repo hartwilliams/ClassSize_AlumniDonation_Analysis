@@ -1,0 +1,157 @@
+---
+title: "Class Size and Alumni Donation Analysis"
+author: "Hart Williams"
+date: "2026-09-01"
+output:
+  word_document: default
+  html_document: default
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Question 1.
+```{r}
+alumni <- read.csv("alumni.csv")
+# head(alumni)
+```
+
+# a. Start with a basic exploratory data analysis. Show summary statistics of the response variable and predictor variable.
+```{r}
+# Alumni giving rate is the response variable Y
+# The percentage of classes with fewer than 20 students is the predictor variable X
+attach(alumni)
+
+summary(percent_of_classes_under_20)
+summary(alumni_giving_rate)
+```
+# b. What is the nature of the variables X and Y? Are there outliers? What is the correlation coefficient? Draw a scatter plot. Any major comments about the data?
+- Variable X, the percent of classes under 20 students, has a median of 59.5% and a slightly lower mean of 55.73%, suggesting the variable is slightly left-skewed.
+- Variable Y, the percent of alumni that have donated, has both a median of 29% and a mean of ~29, suggesting the variable is relatively symmetric.
+```{r}
+# Correlation coefficient
+cor(percent_of_classes_under_20, alumni_giving_rate)
+
+# Scatter plot
+plot(percent_of_classes_under_20, alumni_giving_rate,
+     main = "Percent of classes under 20 students vs. Alumni giving rate",
+     xlab = "Percent of classes under 20 students",
+     ylab = "Percent of alumni that have donated",
+     pch = 19
+     )
+```
+- The correlation coefficient between X and Y is ~0.65.
+- There is one substantial outlier: Princeton has the highest alumni giving rate at 67%, along with 68% of classes under 20 students. The school with the next highest alumni giving rate is Dartmouth at 53%.
+- The data show a moderate positive linear association between X and Y (r=~0.65). Other than one notable outlier, the data appear reasonably well-behaved.
+
+# c. Fit a simple linear regression to the data. What is your estimated regression equation?
+```{r}
+lm(alumni_giving_rate ~ percent_of_classes_under_20, data = alumni)
+```
+- The estimated regression equation is y = 0.66x - 7.39.
+
+# d. Interpret your results.
+- For every 1 percentage-point increase in the percentage of classes with fewer than 20 students, the predicted percentage of alumni who have donated increases by 0.66 percentage points.
+- The intercept of −7.39 means that the model predicts −7.39% of alumni would donate when 0% of classes have fewer than 20 students. However, this is not practically meaningful because a negative percentage of donors is impossible.
+
+# ----------------------------------------------------
+Question 2. 
+
+# Assuming the mean response is \(E\left(Y|X\right) = 10 + 5X\):
+# a. Generate data with \(X \sim N\left(\mu = 2, \sigma = 0.1\right)\), sample size \(n = 100\), and error term \(\epsilon \sim N\left(\mu = 0, \sigma = 0.5\right)\). Hint: you can use rnorm(n = 50, mean = 5, sd = 3) to simulate \(n = 50\) observations from a \(N\left(\mu = 5, \sigma = 3\right)\) distribution, but note that rnorm() specifies the standard deviation (\(\sigma\)), rather than the variance (\(\sigma^2\)), of the normal distribution. It is also good practice to specify the random seed via set.seed() whenever generating random data (otherwise, your results will differ from run to run!). For this exercise, use set.seed(7052) to ensure reproducibility.
+
+```{r}
+set.seed(7052)
+
+# X = the predictor/input variable
+# 10 + 5X = the expected/mean value of Y for a given X
+# epsilon = random error that makes individual Y observations vary around that mean
+# Y = the actual response/output variable
+
+X <- rnorm(n = 100, mean = 2, sd = 0.1)
+epsilon <- rnorm(n = 100, mean = 0, sd = 0.5)
+
+Y <- 10 + 5*X + epsilon
+```
+
+# b. Show summary statistics of the response variable and predictor variable. Are there outliers? What is the correlation coefficient? Draw a scatter plot.
+```{r}
+summary(X)
+summary(Y)
+
+cor(X, Y)
+
+plot(X, Y,
+     main = "Scatterplot of X and Response Variable (Y)",
+     pch = 19
+     )
+```
+- There are two moderate outliers with low X and Y values, away from the main cluster of data points.
+- The correlation coefficient between X and Y is ~0.80.
+
+# c. Fit a simple linear regression. What is the estimated model? Report the estimated coefficients. What is the model mean squared error (MSE)?
+```{r}
+model = lm(Y ~ X)
+model
+mse = summary(model)$sigma^2
+print(mse)
+```
+- The coefficients are an intercept of 9.02 and a slope of 5.57, resulting in the estimated model Y = 5.57X + 9.02.
+- The model mean squared error (MSE) is 0.20.
+
+# d. What is the sample mean of both \(X\) and \(Y\)? Plot the fitted regression line and the point \(\left(\bar{X}, \bar{Y}\right)\). What do you find?
+
+```{r}
+x_bar = mean(X)
+print(x_bar)
+y_bar = mean(Y)
+print(y_bar)
+
+plot(X, Y,
+     main = "Scatterplot of X and Response Variable (Y)",
+     pch = 19
+     )
+abline(model)   # Add regression line
+
+# Color and label mean point
+points(x_bar, y_bar, col="red", pch=19)
+text(x_bar, y_bar, labels="(X_bar, Y_bar)", pos=4, col="red")
+```
+- The sample means of X and Y are 2.00 and 20.17. The sample mean point (2.00, 20.17) lies on the fitted regression line.
+
+# ----------------------------------------------------
+Question 3.
+
+# a. Verify numerically that \(\sum_{i=1}^n e_i = 0\), that \(\sum_{i=1}^n X_i e_i = 0\), and that \(\sum_{i=1}^n \widehat{Y}_i e_i = 0\) — report all three sums. Then state in one sentence what these three zeros say in plain English about the residuals of a least-squares fit (what is there none left of, and relative to what?
+```{r}
+# Get the residuals and fitted values 
+e <- residuals(model)
+Y_hat <- fitted(model)
+
+# Calculate the three sums
+sum(e)           # ∑e_i = 0
+sum(X * e)       # ∑X_i*e_i = 0
+sum(Y_hat * e)   # ∑Y_hat_i*e_i = 0
+```
+- The residuals have no net error and no linear relationship with either the predictor X or the fitted values Y_hat.
+
+# b. Verify numerically that the fitted line passes through \(\left(\bar{X}, \bar{Y}\right)\): compare \(\widehat{\beta}_0 + \widehat{\beta}_1 \bar{X}\) with \(\bar{Y}\). One sentence: which of the sums in part a is this fact a restatement of?
+```{r}
+beta_0 <- coef(model)[1]
+beta_1 <- coef(model)[2]
+
+beta_0 + beta_1 * x_bar
+y_bar
+```
+- This is a restatement of the fact that ∑e_i = 0, meaning that the average observed response equals the average fitted response.
+
+# c. Wrap-up, two or three sentences: what property does least squares guarantee, and how do your results in a–c confirm it on your data?
+Least squares guarantees that the residuals have no net error and are uncorrelated with the predictor and fitted values. The results in parts a-c confirm this property on the simulated data, as all three residual sums were approximately zero, and the fitted line passed through (X_bar, Y_bar).
+
+
+
+
+
+
+
+
