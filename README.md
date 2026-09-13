@@ -1,1 +1,1 @@
-This is an assignment I worked on for BANA 7052: Applied Linear Regression. The focus of the assignment was basic data analysis in R and simple linear regression.
+This is a set of assignments I worked on for BANA 7052: Applied Linear Regression. Each assignment uses the class size and alumni donation data for its initial tasks, then later tasks involve general, simulated data.
